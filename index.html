@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#722F37">
+<title>Tower of Hanoi — Interactive Visualizer</title>
+
+<style>
+:root {
+  --cosmic-latte: #B7A89A;
+  --mocha-cream: #E8DCC6;
+  --deep-burgundy: #722F37;
+  --white: #FFFFFF;
+  --ink: #40272A;
+  --muted-ink: #765B58;
+  --line: rgba(114, 47, 55, .22);
+  --shadow: 0 18px 45px rgba(64, 39, 42, .12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--mocha-cream);
+  color: var(--ink);
+}
+
+button, select {
+  font: inherit;
+}
+
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--cosmic-latte);
+  outline-offset: 3px;
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 28px 0 36px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--deep-burgundy);
+  color: var(--mocha-cream);
+  font-family: Georgia, serif;
+  font-size: 25px;
+}
+
+.brand-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.brand-caption {
+  margin-top: 3px;
+  color: var(--muted-ink);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--deep-burgundy);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+h1 {
+  max-width: 720px;
+  margin: 10px 0 12px;
+  color: var(--deep-burgundy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: .99;
+  letter-spacing: -.04em;
+  font-weight: 600;
+}
+
+.hero p {
+  max-width: 640px;
+  margin: 0;
+  color: var(--muted-ink);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.hero-badge {
+  align-self: center;
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--deep-burgundy);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255,255,255,.22);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.visual-card,
+.control-card,
+.info-card {
+  border: 1px solid rgba(114,47,55,.13);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.visual-card {
+  padding: clamp(16px, 3vw, 26px);
+  background: var(--cosmic-latte);
+  min-width: 0;
+}
+
+.card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.card-heading h2,
+.control-card h2,
+.info-card h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--deep-burgundy);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.tiny-label {
+  color: var(--deep-burgundy);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: var(--deep-burgundy);
+  background: rgba(232,220,198,.7);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.live-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--deep-burgundy);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  min-width: 0;
+  padding: 13px 14px;
+  background: var(--mocha-cream);
+  border: 1px solid rgba(114,47,55,.10);
+  border-radius: 14px;
+}
+
+.stat-label {
+  color: var(--muted-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  display: block;
+  margin-top: 6px;
+  color: var(--deep-burgundy);
+  font-size: clamp(19px, 2.5vw, 27px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 315px;
+}
+
+.tower {
+  position: relative;
+  min-width: 0;
+  height: 315px;
+  overflow: hidden;
+  border: 1px solid rgba(114,47,55,.16);
+  border-radius: 15px;
+  background: rgba(232,220,198,.58);
+}
+
+.tower::before {
+  content: "";
+  position: absolute;
+  inset: 10px 10px auto;
+  height: 1px;
+  background: rgba(114,47,55,.12);
+}
+
+.rod {
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 205px;
+  border-radius: 99px;
+  background: var(--deep-burgundy);
+  opacity: .82;
+}
+
+.base {
+  position: absolute;
+  left: 7%;
+  bottom: 41px;
+  width: 86%;
+  height: 9px;
+  border-radius: 99px;
+  background: var(--deep-burgundy);
+}
+
+.disk {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 20px;
+  border: 2px solid rgba(255,255,255,.7);
+  border-radius: 7px;
+  box-shadow: 0 3px 7px rgba(64,39,42,.12);
+  transition: bottom .32s ease, width .32s ease;
+}
+
+.tower-label {
+  position: absolute;
+  bottom: 13px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: var(--deep-burgundy);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.message {
+  margin-top: 14px;
+  min-height: 48px;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: var(--mocha-cream);
+  border: 1px solid rgba(114,47,55,.12);
+  color: var(--deep-burgundy);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.side-stack {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 18px;
+}
+
+.control-card {
+  padding: 22px;
+  background: var(--white);
+}
+
+.control-card h2 {
+  margin-bottom: 18px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted-ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+select {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--mocha-cream);
+  color: var(--deep-burgundy);
+  cursor: pointer;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--deep-burgundy);
+  border-radius: 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.btn-primary {
+  background: var(--deep-burgundy);
+  color: var(--white);
+}
+
+.btn-secondary {
+  background: var(--mocha-cream);
+  color: var(--deep-burgundy);
+}
+
+.btn-wide {
+  grid-column: 1 / -1;
+}
+
+.control-hint {
+  margin: 14px 0 0;
+  color: var(--muted-ink);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.info-card {
+  padding: 22px;
+  background: var(--deep-burgundy);
+  color: var(--white);
+}
+
+.info-card h2 {
+  color: var(--mocha-cream);
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.formula {
+  padding: 13px 12px;
+  margin-bottom: 12px;
+  text-align: center;
+  border-radius: 12px;
+  background: rgba(232,220,198,.13);
+  color: var(--mocha-cream);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+}
+
+.info-card p {
+  margin: 0;
+  color: rgba(255,255,255,.86);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.rule-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.rule {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  color: rgba(255,255,255,.9);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.rule span {
+  color: var(--mocha-cream);
+  font-weight: 900;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-ink);
+  font-size: 11px;
+}
+
+.footer strong {
+  color: var(--deep-burgundy);
+}
+
+/* Tablet layout */
+@media (max-width: 850px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .hero-badge {
+    justify-self: start;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 560px) {
+  .page-shell {
+    width: calc(100% - 24px);
+    padding-top: 18px;
+  }
+
+  .topbar {
+    margin-bottom: 22px;
+  }
+
+  .brand-mark {
+    width: 39px;
+    height: 39px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .brand-caption {
+    font-size: 9px;
+  }
+
+  .hero {
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(34px, 11vw, 48px);
+  }
+
+  .hero p {
+    font-size: 13px;
+  }
+
+  .hero-badge {
+    font-size: 11px;
+  }
+
+  .visual-card {
+    padding: 13px;
+    border-radius: 18px;
+  }
+
+  .card-heading h2 {
+    font-size: 19px;
+  }
+
+  .stats {
+    gap: 6px;
+  }
+
+  .stat {
+    padding: 10px 8px;
+    border-radius: 11px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: .02em;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .board {
+    gap: 6px;
+    min-height: 245px;
+  }
+
+  .tower {
+    height: 245px;
+    border-radius: 11px;
+  }
+
+  .rod {
+    height: 150px;
+    bottom: 42px;
+    width: 6px;
+  }
+
+  .base {
+    bottom: 35px;
+    height: 8px;
+  }
+
+  .disk {
+    height: 16px;
+    border-radius: 5px;
+  }
+
+  .tower-label {
+    bottom: 10px;
+    font-size: 9px;
+    letter-spacing: .04em;
+  }
+
+  .message {
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .side-stack {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .control-card,
+  .info-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .footer {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+<main class="page-shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">H</div>
+      <div>
+        <div class="brand-name">Hanoi Studio</div>
+        <div class="brand-caption">Data Structures · Interactive Lab</div>
+      </div>
+    </div>
+    <div class="eyebrow">Recursion visualizer</div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">A classic, made visual</div>
+      <h1>Tower of<br>Hanoi</h1>
+      <p>
+        Explore the elegant logic of recursion. Move every disk
+        from the source rod to the destination, one thoughtful
+        step at a time.
+      </p>
+    </div>
+    <div class="hero-badge">C algorithm · Web interface</div>
+  </section>
+
+  <section class="workspace" aria-label="Tower of Hanoi visualizer">
+
+    <div class="visual-card">
+      <div class="card-heading">
+        <div>
+          <div class="tiny-label">Live workspace</div>
+          <h2>Disk arrangement</h2>
+        </div>
+        <div class="live-pill" id="liveLabel">Ready to begin</div>
+      </div>
+
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="stat-label">Moves made</span>
+          <strong class="stat-value" id="moves">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Minimum moves</span>
+          <strong class="stat-value" id="minimum">7</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Disks</span>
+          <strong class="stat-value" id="diskCount">3</strong>
+        </div>
+      </div>
+
+      <div class="board" id="board">
+        <div class="tower" id="tower-A" aria-label="Source rod A">
+          <div class="rod"></div>
+          <div class="base"></div>
+          <div class="tower-label">A · Source</div>
+        </div>
+
+        <div class="tower" id="tower-B" aria-label="Auxiliary rod B">
+          <div class="rod"></div>
+          <div class="base"></div>
+          <div class="tower-label">B · Helper</div>
+        </div>
+
+        <div class="tower" id="tower-C" aria-label="Destination rod C">
+          <div class="rod"></div>
+          <div class="base"></div>
+          <div class="tower-label">C · Target</div>
+        </div>
+      </div>
+
+      <div class="message" id="message" role="status">
+        Choose your disk count, then press Start to watch the solution unfold.
+      </div>
+    </div>
+
+    <aside class="side-stack">
+
+      <section class="control-card">
+        <div class="tiny-label">Your controls</div>
+        <h2>Set the puzzle</h2>
+
+        <label class="field-label" for="count">Number of disks</label>
+        <select id="count">
+          <option value="3" selected>3 disks — beginner</option>
+          <option value="1">1 disk</option>
+          <option value="2">2 disks</option>
+          <option value="4">4 disks</option>
+          <option value="5">5 disks</option>
+          <option value="6">6 disks</option>
+          <option value="7">7 disks</option>
+          <option value="8">8 disks</option>
+        </select>
+
+        <div class="button-grid">
+          <button class="btn btn-primary btn-wide" id="start">
+            ▶ &nbsp; Start animation
+          </button>
+          <button class="btn btn-secondary" id="pause" disabled>
+            Ⅱ &nbsp; Pause
+          </button>
+          <button class="btn btn-secondary" id="step">
+            Next step →
+          </button>
+          <button class="btn btn-secondary btn-wide" id="reset">
+            ↺ &nbsp; Reset puzzle
+          </button>
+        </div>
+
+        <p class="control-hint">
+          Tip: use “Next step” to inspect the recursive sequence at your own pace.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <div class="tiny-label" style="color: var(--mocha-cream);">
+          The logic
+        </div>
+        <h2>Small steps. One solution.</h2>
+
+        <div class="formula">T(n) = 2ⁿ − 1</div>
+
+        <p>
+          The minimum number of moves needed to solve the puzzle with
+          <em>n</em> disks.
+        </p>
+
+        <div class="rule-list">
+          <div class="rule">
+            <span>01</span>
+            <div>Move only one disk at a time.</div>
+          </div>
+          <div class="rule">
+            <span>02</span>
+            <div>Only the top disk can be moved.</div>
+          </div>
+          <div class="rule">
+            <span>03</span>
+            <div>Never place a larger disk on a smaller disk.</div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+  </section>
+
+  <footer class="footer">
+    <span><strong>Hanoi Studio</strong> · Data Structures Mini Project</span>
+    <span>Recursion · Call stack · Algorithm analysis</span>
+  </footer>
+
+</main>
+
+<script>
+const countSelect = document.getElementById("count");
+const startBtn = document.getElementById("start");
+const pauseBtn = document.getElementById("pause");
+const stepBtn = document.getElementById("step");
+const resetBtn = document.getElementById("reset");
+
+const message = document.getElementById("message");
+const statusLabel = document.getElementById("liveLabel");
+
+let towers = { A: [], B: [], C: [] };
+let moves = [];
+let nextMove = 0;
+let timer = null;
+let running = false;
+
+const diskColors = [
+  "#722F37",
+  "#B7A89A",
+  "#E8DCC6"
+];
+
+function solve(n, from, auxiliary, to, list) {
+  if (n === 1) {
+    list.push({ disk: 1, from, to });
+    return;
+  }
+
+  solve(n - 1, from, to, auxiliary, list);
+  list.push({ disk: n, from, to });
+  solve(n - 1, auxiliary, from, to, list);
+}
+
+function init() {
+  clearInterval(timer);
+  timer = null;
+  running = false;
+
+  startBtn.textContent = "▶ Start animation";
+  pauseBtn.disabled = true;
+
+  const n = Number(countSelect.value);
+
+  towers = { A: [], B: [], C: [] };
+
+  for (let disk = n; disk >= 1; disk--) {
+    towers.A.push(disk);
+  }
+
+  moves = [];
+  nextMove = 0;
+
+  solve(n, "A", "B", "C", moves);
+
+  document.getElementById("moves").textContent = "0";
+  document.getElementById("minimum").textContent = moves.length;
+  document.getElementById("diskCount").textContent = n;
+
+  statusLabel.textContent = "Ready";
+  message.textContent = "Ready! Press Start to solve the puzzle.";
+
+  render();
+}
+
+function render() {
+  const mobile = window.innerWidth <= 560;
+  const n = Number(countSelect.value);
+  const diskHeight = mobile ? 16 : 20;
+  const bottomOffset = mobile ? 42 : 48;
+
+  for (const peg of ["A", "B", "C"]) {
+    const tower = document.getElementById("tower-" + peg);
+
+    tower.querySelectorAll(".disk").forEach(d => d.remove());
+
+    towers[peg].forEach((disk, index) => {
+      const el = document.createElement("div");
+
+      el.className = "disk";
+
+      const maxWidth = Math.min(
+        mobile ? 92 : 160,
+        tower.clientWidth * 0.76
+      );
+
+      el.style.width =
+        Math.max(24, 22 + disk * maxWidth / n) + "px";
+
+      el.style.height = diskHeight + "px";
+
+      el.style.bottom =
+        (bottomOffset + index * diskHeight) + "px";
+
+      el.style.background =
+        diskColors[(disk - 1) % diskColors.length];
+
+      el.style.zIndex = index + 1;
+
+      tower.appendChild(el);
+    });
+  }
+}
+
+function oneStep() {
+  if (nextMove >= moves.length) {
+    finish();
+    return;
+  }
+
+  const move = moves[nextMove];
+  const disk = towers[move.from].pop();
+
+  if (
+    disk !== move.disk ||
+    (
+      towers[move.to].length > 0 &&
+      towers[move.to][towers[move.to].length - 1] < disk
+    )
+  ) {
+    clearInterval(timer);
+    timer = null;
+    running = false;
+
+    statusLabel.textContent = "Error";
+    message.textContent = "Invalid move. Please reset the puzzle.";
+    return;
+  }
+
+  towers[move.to].push(disk);
+  nextMove++;
+
+  render();
+
+  document.getElementById("moves").textContent = nextMove;
+
+  message.textContent =
+    `Move ${nextMove}: Disk ${disk} from ${move.from} to ${move.to}.`;
+
+  if (nextMove === moves.length) {
+    finish();
+  }
+}
+
+function finish() {
+  clearInterval(timer);
+  timer = null;
+  running = false;
+
+  startBtn.textContent = "▶ Start again";
+  pauseBtn.disabled = true;
+
+  statusLabel.textContent = "Completed";
+  message.textContent =
+    `Puzzle solved! Total moves: ${nextMove}`;
+}
+
+function start() {
+  if (running) return;
+
+  if (nextMove >= moves.length) {
+    init();
+  }
+
+  running = true;
+  startBtn.textContent = "▶ Running...";
+  pauseBtn.disabled = false;
+  statusLabel.textContent = "Running";
+
+  timer = setInterval(() => {
+    if (running) oneStep();
+  }, 720);
+}
+
+function pause() {
+  clearInterval(timer);
+  timer = null;
+  running = false;
+
+  startBtn.textContent = "▶ Resume animation";
+  pauseBtn.disabled = true;
+  statusLabel.textContent = "Paused";
+}
+
+startBtn.addEventListener("click", start);
+pauseBtn.addEventListener("click", pause);
+
+stepBtn.addEventListener("click", () => {
+  if (running) pause();
+
+  if (nextMove < moves.length) {
+    oneStep();
+  }
+});
+
+resetBtn.addEventListener("click", init);
+countSelect.addEventListener("change", init);
+
+window.addEventListener("resize", render);
+
+init();
+</script>
